@@ -458,3 +458,50 @@ if __name__ == "__main__":
     print("4. Route: Viết vào ma trận, đọc theo route đặc biệt")
     print("\nBảo mật: Frequency analysis không hiệu quả!")
     print("Nhược điểm: Anagram analysis và pattern recognition có thể phá vỡ.")
+
+# Wrapper functions for Streamlit compatibility
+def encrypt_permutation(text, key):
+    """
+    Wrapper function for permutation encryption
+    
+    Args:
+        text (str): Text to encrypt
+        key (str): Key for permutation (will be converted to columnar key)
+        
+    Returns:
+        str: Encrypted text
+    """
+    try:
+        # Convert string key to columnar key
+        if key.isdigit():
+            # If key is numeric, use it as-is
+            return columnar_transposition_encrypt(text, key)
+        else:
+            # If key is alphabetic, use it for columnar transposition
+            return columnar_transposition_encrypt(text, key)
+    except:
+        # Fallback to simple columnar transposition
+        return columnar_transposition_encrypt(text, str(key))
+
+def decrypt_permutation(text, key):
+    """
+    Wrapper function for permutation decryption
+    
+    Args:
+        text (str): Text to decrypt
+        key (str): Key for permutation
+        
+    Returns:
+        str: Decrypted text
+    """
+    try:
+        # Convert string key to columnar key
+        if key.isdigit():
+            # If key is numeric, use it as-is
+            return columnar_transposition_decrypt(text, key)
+        else:
+            # If key is alphabetic, use it for columnar transposition
+            return columnar_transposition_decrypt(text, key)
+    except:
+        # Fallback to simple columnar transposition
+        return columnar_transposition_decrypt(text, str(key))

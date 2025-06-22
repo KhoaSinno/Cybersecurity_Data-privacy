@@ -425,3 +425,40 @@ if __name__ == "__main__":
     print("4. Periodic Key: Lặp lại pattern shift values")
     print("\nPhá vỡ frequency analysis của single substitution!")
     print("Nhưng vẫn có thể bị phá bằng Kasiski examination và IC analysis.")
+
+# Wrapper functions for Streamlit compatibility
+def encrypt_polyalphabetic(text, key):
+    """
+    Wrapper function for polyalphabetic encryption
+    Default to autokey cipher
+    
+    Args:
+        text (str): Text to encrypt
+        key (str): Key for encryption
+        
+    Returns:
+        str: Encrypted text
+    """
+    try:
+        return autokey_encrypt(text, key)
+    except:
+        # Fallback to Beaufort cipher
+        return beaufort_encrypt(text, key)
+
+def decrypt_polyalphabetic(text, key):
+    """
+    Wrapper function for polyalphabetic decryption
+    Default to autokey cipher
+    
+    Args:
+        text (str): Text to decrypt
+        key (str): Key for decryption
+        
+    Returns:
+        str: Decrypted text
+    """
+    try:
+        return autokey_decrypt(text, key)
+    except:
+        # Fallback to Beaufort cipher
+        return beaufort_decrypt(text, key)

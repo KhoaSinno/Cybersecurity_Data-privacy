@@ -484,6 +484,56 @@ def des_decrypt(ciphertext, key):
     return plaintext.rstrip('\0')  # Loại bỏ padding
 
 
+# Wrapper functions for Streamlit compatibility
+def encrypt_des(text, key):
+    """
+    Wrapper function for DES encryption
+    
+    Args:
+        text (str): Text to encrypt
+        key (str): 8-character key
+        
+    Returns:
+        str: Encrypted text in hex format
+    """
+    try:
+        # Ensure key is 8 characters
+        if len(key) < 8:
+            key = key.ljust(8, '0')
+        elif len(key) > 8:
+            key = key[:8]
+        
+        encrypted_bytes = des_encrypt(text.encode('utf-8'), key)
+        return encrypted_bytes.hex().upper()
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+def decrypt_des(ciphertext, key):
+    """
+    Wrapper function for DES decryption
+    
+    Args:
+        ciphertext (str): Hex string to decrypt
+        key (str): 8-character key
+        
+    Returns:
+        str: Decrypted text
+    """
+    try:
+        # Ensure key is 8 characters
+        if len(key) < 8:
+            key = key.ljust(8, '0')
+        elif len(key) > 8:
+            key = key[:8]
+        
+        # Convert hex to bytes
+        cipher_bytes = bytes.fromhex(ciphertext)
+        decrypted_bytes = des_decrypt(cipher_bytes, key)
+        return decrypted_bytes.decode('utf-8', errors='ignore')
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+
 # ================== DEMO CHƯƠNG TRÌNH ==================
 if __name__ == "__main__":
     print("=== DES (DATA ENCRYPTION STANDARD) DEMO ===")

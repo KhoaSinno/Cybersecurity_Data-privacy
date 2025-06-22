@@ -392,17 +392,126 @@ def show_playfair_cipher():
     with st.expander("📚 Lý Thuyết & Nguyên Lý", expanded=True):
         st.markdown('<div class="info-box">', unsafe_allow_html=True)
         st.markdown("""
-        **Playfair Cipher** mã hóa cặp ký tự (digraph) thay vì từng ký tự đơn lẻ, làm tăng độ bảo mật.
+        **Playfair Cipher** được Charles Wheatstone phát minh năm 1854, phổ biến bởi Lord Playfair. 
+        Đây là cipher digraph đầu tiên, mã hóa cặp ký tự thay vì từng ký tự riêng lẻ.
         
-        **🔬 Nguyên Lý:**
-        1. Tạo ma trận 5x5 từ keyword (loại bỏ ký tự trùng, I/J được coi là một)
-        2. Chia plaintext thành các cặp ký tự
-        3. Áp dụng quy tắc mã hóa theo vị trí trong ma trận
+        **🔬 Nguyên Lý Hoạt Động:**
+        1. **Tạo Key Square 5×5**: Từ keyword, loại bỏ ký tự trùng, I/J coi là một
+        2. **Chuẩn bị plaintext**: Chia thành digraphs, chèn 'X' nếu cặp giống nhau
+        3. **Áp dụng quy tắc mã hóa** theo vị trí trong ma trận
         
-        **📐 Quy Tắc Mã Hóa:**
-        - Cùng hàng: Dịch phải 1 vị trí
-        - Cùng cột: Dịch xuống 1 vị trí  
-        - Khác hàng & cột: Tạo hình chữ nhật, hoán đổi góc
+        **📐 Ba Quy Tắc Mã Hóa:**
+        - **Cùng hàng**: Dịch phải 1 vị trí (wrap around)
+        - **Cùng cột**: Dịch xuống 1 vị trí (wrap around)  
+        - **Hình chữ nhật**: Hoán đổi góc đối diện
+        
+        **⚡ Độ Phức Tạp:**
+        - Mã hóa/Giải mã: O(n) với n = độ dài text
+        - Key space: 25! ≈ 1.5 × 10²⁵ (rất lớn)
+        - Thực tế: Giảm do cấu trúc ngôn ngữ
+        """)
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Mã giả chi tiết
+    with st.expander("💻 Mã Giả & Thuật Toán"):
+        st.markdown('<div class="example-box">', unsafe_allow_html=True)
+        st.markdown("""
+        **Thuật toán Playfair Encrypt:**
+        
+        ```python
+        def playfair_encrypt(plaintext, keyword):
+            # Bước 1: Tạo key square 5x5
+            key_square = create_key_square(keyword)
+            
+            # Bước 2: Chuẩn bị plaintext
+            digraphs = prepare_text(plaintext)
+            
+            ciphertext = ""
+            for char1, char2 in digraphs:
+                pos1 = find_position(char1, key_square)
+                pos2 = find_position(char2, key_square)
+                
+                if pos1.row == pos2.row:  # Cùng hàng
+                    cipher1 = key_square[pos1.row][(pos1.col + 1) % 5]
+                    cipher2 = key_square[pos2.row][(pos2.col + 1) % 5]
+                elif pos1.col == pos2.col:  # Cùng cột
+                    cipher1 = key_square[(pos1.row + 1) % 5][pos1.col]
+                    cipher2 = key_square[(pos2.row + 1) % 5][pos2.col]
+                else:  # Hình chữ nhật
+                    cipher1 = key_square[pos1.row][pos2.col]
+                    cipher2 = key_square[pos2.row][pos1.col]
+                
+                ciphertext += cipher1 + cipher2
+            
+            return ciphertext
+        ```
+        """)
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Ví dụ chi tiết
+    with st.expander("📖 Ví Dụ Chi Tiết"):
+        st.markdown('<div class="example-box">', unsafe_allow_html=True)
+        st.markdown("""
+        **Ví dụ: Mã hóa "HELLO" với keyword "MONARCHY"**
+        
+        **Bước 1: Tạo Key Square**
+        
+        Keyword: MONARCHY → M O N A R C H Y (loại trùng)  
+        Alphabet còn lại: B D E F G I K L P Q S T U V W X Z
+        
+        Key Square 5×5:
+        ```
+        M  O  N  A  R
+        C  H  Y  B  D
+        E  F  G  I  K
+        L  P  Q  S  T
+        U  V  W  X  Z
+        ```
+        
+        **Bước 2: Chuẩn bị plaintext**
+        
+        HELLO → HE, LL, O  
+        Vì LL trùng → HE, LX, O  
+        Vì O lẻ → HE, LX, OX  
+        Digraphs: (H,E), (L,X), (O,X)
+        
+        **Bước 3: Mã hóa từng cặp**
+        
+        **(H,E)**: H(1,1), E(2,0) → Hình chữ nhật → C(1,0), F(2,1) = **CF**  
+        **(L,X)**: L(3,0), X(4,3) → Hình chữ nhật → S(3,3), V(4,0) = **SV**  
+        **(O,X)**: O(0,1), X(4,3) → Hình chữ nhật → A(0,3), V(4,1) = **AV**
+        
+        **Kết quả: HELLO → CFSVAV**
+        """)
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Phân tích bảo mật
+    with st.expander("🔒 Phân Tích Bảo Mật"):
+        st.markdown('<div class="security-box">', unsafe_allow_html=True)
+        st.markdown("""
+        **👍 Ưu Điểm:**
+        - **Khắc phục frequency analysis**: Mã hóa digraph làm phức tạp phân tích tần suất
+        - **Key space lớn**: 25! khả năng lý thuyết
+        - **Đơn giản**: Dễ thực hiện thủ công, không cần máy tính
+        - **Lịch sử**: Được quân đội Anh sử dụng trong WWI
+        
+        **👎 Nhược Điểm:**
+        - **Digraph frequency**: Vẫn có thể phân tích tần suất digraph
+        - **Key structure**: Key square giảm entropy thực tế
+        - **Cấu trúc ngôn ngữ**: Một số digraph phổ biến (TH, HE, IN...)
+        - **Cryptanalysis**: Có thể bị phá bằng hill climbing, genetic algorithms
+        
+        **🎯 Phương Pháp Tấn Công:**
+        1. **Frequency Analysis**: Phân tích tần suất digraph
+        2. **Known Plaintext**: Biết một phần plaintext
+        3. **Brute Force**: Với key ngắn
+        4. **Pattern Analysis**: Tìm patterns trong ciphertext
+        
+        **📊 Đánh Giá:**
+        - **Độ bảo mật**: Thấp (theo tiêu chuẩn hiện đại)
+        - **Tốc độ**: Nhanh (thủ công hoặc máy tính)
+        - **Ứng dụng**: Chỉ phù hợp giáo dục/demo
+        - **Thay thế**: Sử dụng AES cho ứng dụng thực tế
         """)
         st.markdown('</div>', unsafe_allow_html=True)
     
@@ -545,6 +654,195 @@ def show_permutation_cipher():
     """Hiển thị Permutation Cipher"""
     
     st.markdown('<h2 class="algorithm-header">🔄 Permutation Cipher - Mã Hóa Hoán Vị</h2>', unsafe_allow_html=True)
+    
+    with st.expander("📚 Lý Thuyết & Nguyên Lý", expanded=True):
+        st.markdown('<div class="info-box">', unsafe_allow_html=True)
+        st.markdown("""
+        **Permutation Cipher** (còn gọi là Transposition Cipher) thay đổi vị trí các ký tự 
+        trong plaintext mà không thay đổi chính ký tự đó. Đây là một trong những phương pháp mã hóa cổ điển.
+        
+        **🔬 Nguyên Lý Hoạt Động:**
+        - **Columnar Transposition**: Sắp xếp text thành bảng theo key
+        - **Key**: Chuỗi số xác định thứ tự đọc cột
+        - **Encryption**: Ghi theo hàng, đọc theo cột theo key order
+        - **Decryption**: Ngược lại encryption process
+        
+        **📐 Quy Trình:**
+        1. Chia plaintext thành blocks có độ dài = key length
+        2. Sắp xếp thành ma trận theo hàng
+        3. Đọc theo cột theo thứ tự key
+        4. Ghép lại thành ciphertext
+        
+        **⚡ Độ Phức Tạp:**
+        - Mã hóa/Giải mã: O(n) với n = độ dài text
+        - Key space: k! với k = độ dài key
+        - Brute force: O(k! × n) - khả thi với key ngắn
+        """)
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Mã giả chi tiết
+    with st.expander("💻 Mã Giả & Thuật Toán"):
+        st.markdown('<div class="example-box">', unsafe_allow_html=True)
+        st.markdown("""
+        **Thuật toán Permutation Cipher:**
+        
+        ```python
+        def permutation_encrypt(plaintext, key):
+            # Bước 1: Chuẩn bị key và text
+            key_order = [int(d) for d in key]
+            key_length = len(key_order)
+            
+            # Padding text to multiple of key length
+            while len(plaintext) % key_length != 0:
+                plaintext += 'X'
+            
+            ciphertext = ""
+            
+            # Bước 2: Xử lý từng block
+            for i in range(0, len(plaintext), key_length):
+                block = plaintext[i:i+key_length]
+                
+                # Tạo ma trận 1 hàng x key_length cột
+                matrix = list(block)
+                
+                # Đọc theo thứ tự key
+                sorted_positions = sorted(range(key_length), 
+                                        key=lambda x: key_order[x])
+                
+                for pos in sorted_positions:
+                    ciphertext += matrix[pos]
+            
+            return ciphertext
+            
+        def permutation_decrypt(ciphertext, key):
+            key_order = [int(d) for d in key]
+            key_length = len(key_order)
+            
+            plaintext = ""
+            
+            # Tạo reverse key mapping
+            reverse_key = [0] * key_length
+            for i, val in enumerate(key_order):
+                reverse_key[val-1] = i
+            
+            for i in range(0, len(ciphertext), key_length):
+                block = ciphertext[i:i+key_length]
+                decrypted_block = [''] * key_length
+                
+                # Restore original positions
+                for j, char in enumerate(block):
+                    original_pos = reverse_key[j]
+                    decrypted_block[original_pos] = char
+                
+                plaintext += ''.join(decrypted_block)
+            
+            return plaintext.rstrip('X')  # Remove padding
+        ```
+        """)
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Ví dụ chi tiết
+    with st.expander("📖 Ví Dụ Chi Tiết"):
+        st.markdown('<div class="example-box">', unsafe_allow_html=True)
+        st.markdown("""
+        **Ví dụ: Mã hóa "HELLO WORLD" với key "3142"**
+        
+        **Bước 1: Chuẩn bị**
+        
+        Plaintext: "HELLO WORLD" (loại bỏ space) → "HELLOWORLD"  
+        Key: "3142" → [3, 1, 4, 2]  
+        Key length: 4
+        
+        **Bước 2: Padding và chia block**
+        
+        "HELLOWORLD" → "HELLOWORLDXX" (padding để chia hết cho 4)  
+        Blocks: "HELL", "OWOR", "LDXX"
+        
+        **Bước 3: Xử lý từng block**
+        
+        **Block 1: "HELL"**
+        ```
+        Position:  0  1  2  3
+        Char:      H  E  L  L
+        Key:       3  1  4  2
+        ```
+        
+        Sắp xếp theo key: 1→2→3→4  
+        Positions: 1→3→0→2  
+        Đọc: E → L → H → L = "ELHL"
+        
+        **Block 2: "OWOR"**
+        ```
+        Position:  0  1  2  3
+        Char:      O  W  O  R
+        Key:       3  1  4  2
+        ```
+        
+        Đọc: W → R → O → O = "WROO"
+        
+        **Block 3: "LDXX"**
+        ```
+        Position:  0  1  2  3
+        Char:      L  D  X  X
+        Key:       3  1  4  2
+        ```
+        
+        Đọc: D → X → L → X = "DXLX"
+        
+        **Kết quả: "HELLO WORLD" → "ELHWROODXLX"**
+        
+        **Giải mã (ngược lại):**
+        
+        Key reverse mapping: [2, 3, 0, 1]  
+        "ELHWROODXLX" → "HELL" + "OWOR" + "LDXX" → "HELLOWORLD"
+        """)
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Phân tích bảo mật
+    with st.expander("🔒 Phân Tích Bảo Mật"):
+        st.markdown('<div class="security-box">', unsafe_allow_html=True)
+        st.markdown("""
+        **👍 Ưu Điểm:**
+        - **Bảo toàn frequency**: Không thay đổi tần suất ký tự
+        - **Đơn giản**: Dễ hiểu và implementation
+        - **Tốc độ**: Nhanh, chỉ cần sắp xếp
+        - **Kết hợp**: Có thể kết hợp với substitution ciphers
+        
+        **👎 Nhược Điểm:**
+        - **Frequency analysis**: Tần suất ký tự không đổi
+        - **Pattern preservation**: Giữ nguyên một số patterns
+        - **Key space nhỏ**: k! với k thường nhỏ
+        - **Anagram attack**: Dễ nhận ra từ các anagram
+        
+        **🎯 Phương Pháp Tấn Công:**
+        
+        1. **Frequency Analysis:**
+           - Phân tích tần suất ký tự
+           - So sánh với ngôn ngữ gốc
+           - Xác định có phải transposition không
+        
+        2. **Anagram Detection:**
+           - Tìm words có cùng letters
+           - Sử dụng dictionary attack
+           - Kiểm tra permutations của common words
+        
+        3. **Brute Force:**
+           - Thử tất cả k! permutations
+           - Với k ≤ 7: khả thi (5040 permutations)
+           - Với k > 10: không khả thi
+        
+        4. **Column Analysis:**
+           - Phân tích patterns theo cột
+           - Tìm key length qua statistical methods
+           - Simulated annealing, genetic algorithms
+        
+        **📊 Đánh Giá:**
+        - **Độ bảo mật**: Thấp (đặc biệt với key ngắn)
+        - **Tốc độ**: Rất nhanh O(n)
+        - **Ứng dụng**: Kết hợp với substitution, giáo dục
+        - **Cải tiến**: Block ciphers hiện đại (AES với P-boxes)
+        """)
+        st.markdown('</div>', unsafe_allow_html=True)
     
     # Demo tương tác
     st.markdown("### 🎮 Demo Tương Tác")

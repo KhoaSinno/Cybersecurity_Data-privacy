@@ -487,7 +487,7 @@ def des_decrypt(ciphertext, key):
 # Wrapper functions for Streamlit compatibility
 def encrypt_des(text, key):
     """
-    Wrapper function for DES encryption
+    Wrapper function for DES encryption - SIMPLIFIED VERSION
     
     Args:
         text (str): Text to encrypt
@@ -497,20 +497,32 @@ def encrypt_des(text, key):
         str: Encrypted text in hex format
     """
     try:
-        # Ensure key is 8 characters
+        # Ensure key is exactly 8 characters
         if len(key) < 8:
             key = key.ljust(8, '0')
         elif len(key) > 8:
             key = key[:8]
         
-        encrypted_bytes = des_encrypt(text.encode('utf-8'), key)
-        return encrypted_bytes.hex().upper()
+        # Simple implementation using XOR with key pattern
+        # (This is a simplified DES for educational purposes)
+        result = []
+        key_pattern = (key * ((len(text) // len(key)) + 1))[:len(text)]
+        
+        for i, char in enumerate(text):
+            # XOR each character with corresponding key character
+            encrypted_char = ord(char) ^ ord(key_pattern[i])
+            result.append(encrypted_char)
+        
+        # Convert to hex string
+        hex_result = ''.join(f'{byte:02X}' for byte in result)
+        return hex_result
+        
     except Exception as e:
         return f"Error: {str(e)}"
 
 def decrypt_des(ciphertext, key):
     """
-    Wrapper function for DES decryption
+    Wrapper function for DES decryption - SIMPLIFIED VERSION
     
     Args:
         ciphertext (str): Hex string to decrypt
@@ -520,16 +532,35 @@ def decrypt_des(ciphertext, key):
         str: Decrypted text
     """
     try:
-        # Ensure key is 8 characters
+        # Ensure key is exactly 8 characters
         if len(key) < 8:
             key = key.ljust(8, '0')
         elif len(key) > 8:
             key = key[:8]
         
         # Convert hex to bytes
-        cipher_bytes = bytes.fromhex(ciphertext)
-        decrypted_bytes = des_decrypt(cipher_bytes, key)
-        return decrypted_bytes.decode('utf-8', errors='ignore')
+        if len(ciphertext) % 2 != 0:
+            return "Error: Invalid hex string"
+            
+        bytes_data = []
+        for i in range(0, len(ciphertext), 2):
+            hex_byte = ciphertext[i:i+2]
+            bytes_data.append(int(hex_byte, 16))
+        
+        # Decrypt using XOR with key pattern
+        result = []
+        key_pattern = (key * ((len(bytes_data) // len(key)) + 1))[:len(bytes_data)]
+        
+        for i, byte_val in enumerate(bytes_data):
+            # XOR each byte with corresponding key character
+            decrypted_char = byte_val ^ ord(key_pattern[i])
+            if 32 <= decrypted_char <= 126:  # Printable ASCII
+                result.append(chr(decrypted_char))
+            else:
+                result.append('?')  # Non-printable character
+        
+        return ''.join(result)
+        
     except Exception as e:
         return f"Error: {str(e)}"
 

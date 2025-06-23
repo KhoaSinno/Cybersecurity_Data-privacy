@@ -31,4 +31,17 @@ dist/
 build/
 *.egg-info/
 
+# Custom cleanup - Temporary and backup files
+*_backup*.py
+*_test*.py
+*_broken*.py
+*.tmp
+*.bak
+.DS_Store
+Thumbs.db
+COMPLETION_SUMMARY.md
+FINAL_PROJECT_REPORT.md
+DEPLOY_GUIDE.md
+FIX_SUMMARY.md
+DEPLOYMENT_READY.md
 GUID.MD

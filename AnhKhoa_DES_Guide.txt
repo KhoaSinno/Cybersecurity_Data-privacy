@@ -9,10 +9,9 @@
 4. KEY SCHEDULE - TẠO KHÓA CON
 5. 16 VÒNG FEISTEL ROUNDS
 6. HÀM F - CORE FUNCTION
-7. S-BOXES CHI TIẾT
-8. FINAL PERMUTATION
-9. VÍ DỤ THỰC TẾ HOÀN CHỈNH
-10. CHẠY CODE DEMO
+7. FINAL PERMUTATION
+8. VÍ DỤ THỰC TẾ HOÀN CHỈNH
+9. CHẠY CODE DEMO
 
 ================================================================================
 1. 📋 TỔNG QUAN QUY TRÌNH
@@ -342,7 +341,7 @@ R_32bit →  E-box  → XOR vs K1 → S-Boxes → P-Permutation → F_Output
 32-bit  → 48-bit  →  48-bit   →  32-bit →    32-bit     →  32-bit
 
 ================================================================================
-8. 🔄 FINAL PERMUTATION (FP) - BƯỚC CUỐI CÙNG
+7. 🔄 FINAL PERMUTATION (FP) - BƯỚC CUỐI CÙNG
 ================================================================================
 
 🔹 VỊ TRÍ TRONG QUY TRÌNH DES:
@@ -378,7 +377,7 @@ After_FP  = Final ciphertext = A1B2C3D4E5F60789 (hex)
 - **FP**: Cuối thuật toán, 64-bit, 1 lần, nghịch đảo IP
 
 ================================================================================
-9. 📝 VÍ DỤ THỰC TẾ HOÀN CHỈNH
+8. 📝 VÍ DỤ THỰC TẾ HOÀN CHỈNH
 ================================================================================
 
 INPUT DATA:
@@ -417,7 +416,7 @@ Combined = R16 + L16
 Ciphertext = FP(Combined) = A1B2C3D4E5F60789 (hex format)
 
 ================================================================================
-10. 💻 CODE DEMO VỚI PYTHON THUẦN TÚY
+9. 💻 CODE DEMO VỚI PYTHON THUẦN TÚY
 ================================================================================
 
 🔹 CODE HOÀN CHỈNH ĐÃ KIỂM TRA - CHẠY ĐƯỢC 100%:

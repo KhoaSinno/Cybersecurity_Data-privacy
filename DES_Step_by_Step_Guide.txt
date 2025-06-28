@@ -301,25 +301,81 @@ S-Box_Output = 01011001000111011011111001001101 (32-bit)
  2:  4  1 14  8 13  6  2 11 15 12  9  7  3 10  5  0
  3: 15 12  8  2  4  9  1  7  5 11  3 14 10  0  6 13
 
-BƯỚC 6.4: PERMUTATION - 32-bit → 32-bit
+BƯỚC 6.4: P-Box (PERMUTATION) - 32-bit → 32-bit
+
+🔹 MỤC ĐÍCH:
+- Hoán vị kết quả từ S-Boxes để tạo sự phân tán (diffusion)
+- Đảm bảo mỗi bit output phụ thuộc vào nhiều bit input khác nhau
+- Tăng độ phức tạp và bảo mật của thuật toán
+
+🔹 CÁCH THỰC HIỆN:
 P_table = [16,7,20,21,29,12,28,17, 1,15,23,26,5,18,31,10,
            2,8,24,14,32,27,3,9, 19,13,30,6,22,11,4,25]
 
+Áp dụng: Permutation_Output[i] = S-Box_Output[P_table[i] - 1]
+
+🔹 VÍ DỤ THỰC TẾ:
+Input từ S-Boxes: 01011001000111011011111001001101
+Đánh số vị trí:   12345678901234567890123456789012
+                  1         2         3
+
+🔹 CHI TIẾT CÁCH ĐỌC VỊ TRÍ:
+Input chia thành nhóm: 01011001 | 00011101 | 10111110 | 01001101
+Vị trí 1-8:           01011001
+Vị trí 9-16:          00011101  
+Vị trí 17-24:         10111110
+Vị trí 25-32:         01001101
+
+Áp dụng P_table:
+- P_table[0] = 16 → lấy bit thứ 16 = 1 (vị trí 16 trong "00011101")
+- P_table[1] = 7  → lấy bit thứ 7  = 1 (vị trí 7 trong "01011001")  
+- P_table[2] = 20 → lấy bit thứ 20 = 1 (vị trí 20 trong "10111110")
+- P_table[3] = 21 → lấy bit thứ 21 = 0 (vị trí 21 trong "10111110")
+- P_table[4] = 29 → lấy bit thứ 29 = 1 (vị trí 29 trong "01001101")
+- ... (tiếp tục cho 32 vị trí)
+
+🔹 KẾT QUẢ CUỐI CÙNG:
+F_Function_Output = 10010110011100001011010111000110 (32-bit)
+
+🔹 TÓM TẮT LẠI HÀM F:
+R_32bit →  E-box  → XOR vs K1 → S-Boxes → P-Permutation → F_Output
+32-bit  → 48-bit  →  48-bit   →  32-bit →    32-bit     →  32-bit
+
 ================================================================================
-8. 🔄 FINAL PERMUTATION (FP)
+8. 🔄 FINAL PERMUTATION (FP) - BƯỚC CUỐI CÙNG
 ================================================================================
 
-SAU 16 ROUNDS: R16 + L16 (64-bit)
+🔹 VỊ TRÍ TRONG QUY TRÌNH DES:
+Plaintext → IP → 16 Feistel Rounds → Combine R16+L16 → **FP** → Ciphertext
 
-ÁP DỤNG FP (nghịch đảo của IP):
+🔹 MỤC ĐÍCH:
+- Nghịch đảo của Initial Permutation (IP)
+- Hoàn thành quá trình mã hóa
+- Đưa dữ liệu về dạng chuẩn cuối cùng
+
+🔹 THỜI ĐIỂM THỰC HIỆN:
+SAU 16 ROUNDS: R16 + L16 (64-bit) → Áp dụng FP
+
+🔹 QUAN HỆ VỚI IP:
+- IP(FP(x)) = x (nghịch đảo hoàn hảo)
+- FP hoàn tác những gì IP đã làm
+
+🔹 BẢNG FP (nghịch đảo của IP):
 FP_table = [40,8,48,16,56,24,64,32, 39,7,47,15,55,23,63,31,
             38,6,46,14,54,22,62,30, 37,5,45,13,53,21,61,29,
             36,4,44,12,52,20,60,28, 35,3,43,11,51,19,59,27,
             34,2,42,10,50,18,58,26, 33,1,41,9,49,17,57,25]
 
-VÍ DỤ:
+🔹 CÁCH ÁP DỤNG:
+Ciphertext[i] = Combined_64bit[FP_table[i] - 1]
+
+🔹 VÍ DỤ:
 Before_FP = R16 + L16 = 1010110011110000... (64-bit)
 After_FP  = Final ciphertext = A1B2C3D4E5F60789 (hex)
+
+🔹 SO SÁNH VỚI P-BOX:
+- **P-Box**: Trong Hàm F, 32-bit, 16 lần, tạo diffusion
+- **FP**: Cuối thuật toán, 64-bit, 1 lần, nghịch đảo IP
 
 ================================================================================
 9. 📝 VÍ DỤ THỰC TẾ HOÀN CHỈNH
@@ -338,7 +394,12 @@ After_IP = 1100110000000000110000001111111111110000101010101100110000001111
 L0 = 11001100000000001100000011111111
 R0 = 11110000101010101100110000001111
 
-BƯỚC 3: KEY SCHEDULE
+BƯỚC 3: KEY SCHEDULE (từ PC-1 và dịch trái)
+PC-1 Result = 00000000111111110000000010100011010011001001000000110110 (56-bit)
+C0 = 0000000011111111000000001010 (28-bit)
+D0 = 0011010011001001000000110110 (28-bit)
+
+Round Keys được tạo:
 K1  = 000110110000001011101111111111000111000001110010
 K2  = 011110011010111011011001110110111100100111100101
 K3  = 010101011111110010001010010000101100111110011001
@@ -356,7 +417,7 @@ Combined = R16 + L16
 Ciphertext = FP(Combined) = A1B2C3D4E5F60789 (hex format)
 
 ================================================================================
-10. 💻 CHẠY CODE DEMO
+10. 💻 CODE DEMO VỚI PYTHON
 ================================================================================
 
 ĐỂ CHẠY DEMO TRÊN MÁY:

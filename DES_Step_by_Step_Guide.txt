@@ -44,7 +44,7 @@ Master Key (64-bit) → Key Schedule → 16 Round Keys (48-bit each)
 2. 🔤 CHUẨN BỊ DỮ LIỆU ĐẦU VÀO
 ================================================================================
 
-VÍ DỤ: Plaintext = "HELLO123"
+== Case 1: Lý tưởng Plaintext = "HELLO123"
 
 BƯỚC 2.1: TEXT → ASCII → BINARY
 'H' = 72  = 01001000
@@ -59,9 +59,21 @@ BƯỚC 2.1: TEXT → ASCII → BINARY
 BƯỚC 2.2: GHÉP THÀNH 64-BIT
 Plaintext_64bit = 0100100001000101010011000100110001001111001100010011001000110011
 
-BƯỚC 2.3: KIỂM TRA
-Length = 64 bits ✓
-Format = Binary string ✓
+== Case 2: Plaintext = "HELLO" 
+=> Áp dụng PKCS#7 Padding với quy tắc: Số byte padding = Giá trị của mỗi padding byte
+Plaintext thành: "HELLO\x03\x03\x03"
+'H' = 72  = 01001000
+'E' = 69  = 01000101
+'L' = 76  = 01001100
+'L' = 76  = 01001100
+'O' = 79  = 01001111
+\x03 = 3  = 00000011 (Số 3)
+\x03 = 3  = 00000011
+\x03 = 3  = 00000011
+
+Plaintext_64bit = 0100100001000101010011000100110001001111000000110000001100000011
+
+== Case 3: Plaintext > 64bit thì ra cắt ra thành các đoạn đủ 64bit, nếu không đủ thì ta cứ áp dụng padding giống Case 2.
 
 ================================================================================
 3. 🔄 INITIAL PERMUTATION (IP)
@@ -79,14 +91,13 @@ BẢNG IP (64 phần tử):
  61, 53, 45, 37, 29, 21, 13, 5,
  63, 55, 47, 39, 31, 23, 15, 7]
 
-CÁCH ÁP DỤNG:
+CÁCH ÁP DỤNG - Thế vị trí tương ứng từ plaintext vào bản IP này:
 Output[1] = Input[58]
 Output[2] = Input[50]
-Output[3] = Input[42]
 ...
 Output[64] = Input[7]
 
-VÍ DỤ VỚI "HELLO123":
+Plaintext ở trên: "HELLO123":
 Input:    0100100001000101010011000100110001001111001100010011001000110011
 After IP: 1100110000000000110000001111111111110000101010101100110000001111
 
@@ -95,7 +106,7 @@ L0 = 11001100000000001100000011111111 (32-bit)
 R0 = 11110000101010101100110000001111 (32-bit)
 
 ================================================================================
-4. 🔑 KEY SCHEDULE - TẠO KHÓA CON
+4. 🔑 KEY SCHEDULE - TẠO KHÓA CON (Này có thể chạy song song nên em để tạo khóa ở đây)
 ================================================================================
 
 VÍ DỤ: Master Key = "MYSECRET"

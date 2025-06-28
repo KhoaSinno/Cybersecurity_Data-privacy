@@ -300,7 +300,7 @@ S-Box_Output = 01011001000111011011111001001101 (32-bit)
  2:  4  1 14  8 13  6  2 11 15 12  9  7  3 10  5  0
  3: 15 12  8  2  4  9  1  7  5 11  3 14 10  0  6 13
 
-BƯỚC 6.4: P-Box (PERMUTATION) - 32-bit → 32-bit
+BƯỚC 6.4: P-BOX (PERMUTATION) - 32-bit → 32-bit
 
 🔹 MỤC ĐÍCH:
 - Hoán vị kết quả từ S-Boxes để tạo sự phân tán (diffusion)
@@ -456,9 +456,51 @@ E = [32,1,2,3,4,5,4,5,6,7,8,9,8,9,10,11,12,13,12,13,14,15,16,17,
 
 # S-Box 1 chuẩn DES
 S1 = [[14,4,13,1,2,15,11,8,3,10,6,12,5,9,0,7],
-      [0,15,7,4,14,2,13,1,10,6,12,11,9,5,3,8],
-      [4,1,14,8,13,6,2,11,15,12,9,7,3,10,5,0],
-      [15,12,8,2,4,9,1,7,5,11,3,14,10,0,6,13]]
+      [0,15, 7, 4,14, 2,13, 1,10, 6,12,11, 9, 5, 3, 8],
+      [4, 1,14, 8,13, 6, 2,11,15,12, 9, 7, 3,10, 5, 0],
+      [15,12, 8, 2, 4, 9, 1, 7, 5,11, 3,14,10, 0, 6,13]]
+
+# S-Box 2 chuẩn DES
+S2 = [[15, 1, 8,14, 6,11, 3, 4,13,10, 2, 7, 9, 5, 0, 6],
+      [ 3,13, 4, 7,15, 2, 8,14, 9,10,11, 1, 6,12, 0, 5],
+      [ 2, 9, 6, 3, 8, 4, 1, 14, 7, 10, 11, 13, 15, 0, 5, 12],
+      [ 4, 2, 1, 11,10,13, 7, 8, 9, 3, 14, 5, 0, 6, 12, 15]]
+
+# S-Box 3 chuẩn DES
+S3 = [[ 9, 4, 5, 6, 1, 8, 13, 11, 15, 2, 7, 12, 0, 14, 3, 10],
+      [ 2, 15, 11, 9, 7, 4, 14, 1, 10, 8, 13, 6, 12, 11, 5, 3],
+      [ 3, 10, 5, 14, 9, 8, 2, 7, 12, 0, 15, 13, 1, 6, 4, 11],
+      [ 14, 11, 6, 3, 10, 5, 9, 0, 15, 13, 7, 4, 2, 1, 8, 12]]
+
+# S-Box 4 chuẩn DES
+S4 = [[ 2, 15, 11, 9, 7, 4, 14, 1, 10, 8, 13, 6, 12, 11, 5, 3],
+      [ 4, 2, 1, 11,10,13, 7, 8, 9, 3, 14, 5, 0, 6, 12, 15],
+      [ 1, 4, 11, 13, 0, 5, 9, 7, 6, 10, 14, 3, 2, 8, 15, 12],
+      [ 13, 0, 11, 7, 4, 9, 1, 10, 14, 5, 3, 2, 15, 8, 6, 12]]
+
+# S-Box 5 chuẩn DES
+S5 = [[ 4, 1, 14, 8,13, 6, 2,11,15,12, 9, 7, 3,10, 5, 0],
+      [ 6, 11, 13, 7, 8, 9, 3,14, 5, 0, 15, 2, 1, 10, 4, 12],
+      [ 13, 2, 8, 4, 6, 10, 1, 15, 14, 9, 11, 3, 7, 12, 0, 5],
+      [ 1, 15, 13, 8, 10, 4, 2, 11, 14, 7, 6, 12, 0, 9, 5, 3]]
+
+# S-Box 6 chuẩn DES
+S6 = [[ 13, 2, 8, 4, 6, 10, 1, 15, 14, 9, 11, 3, 7, 12, 0, 5],
+      [ 1, 15, 13, 8, 10, 4, 2, 11, 14, 7, 6, 12, 0, 9, 5, 3],
+      [ 4, 1, 14, 8,13, 6, 2,11,15,12, 9, 7, 3,10, 5, 0],
+      [ 6, 11, 13, 7, 8, 9, 3,14, 5, 0, 15, 2, 1, 10, 4, 12]]
+
+# S-Box 7 chuẩn DES
+S7 = [[ 1, 15, 13, 8, 10, 4, 2, 11, 14, 7, 6, 12, 0, 9, 5, 3],
+      [ 4, 1, 14, 8,13, 6, 2,11,15,12, 9, 7, 3,10, 5, 0],
+      [ 6, 11, 13, 7, 8, 9, 3,14, 5, 0, 15, 2, 1, 10, 4, 12],
+      [ 13, 2, 8, 4, 6, 10, 1, 15, 14, 9, 11, 3, 7, 12, 0, 5]]
+
+# S-Box 8 chuẩn DES
+S8 = [[ 13, 2, 8, 4, 6, 10, 1, 15, 14, 9, 11, 3, 7, 12, 0, 5],
+      [ 1, 15, 13, 8, 10, 4, 2, 11, 14, 7, 6, 12, 0, 9, 5, 3],
+      [ 4, 1, 14, 8,13, 6, 2,11,15,12, 9, 7, 3,10, 5, 0],
+      [ 6, 11, 13, 7, 8, 9, 3,14, 5, 0, 15, 2, 1, 10, 4, 12]]
 
 P = [16,7,20,21,29,12,28,17,1,15,23,26,5,18,31,10,
      2,8,24,14,32,27,3,9,19,13,30,6,22,11,4,25]
@@ -534,16 +576,24 @@ def des_demo():
     print(f"XOR result:   {xor_result}")
     print()
     
-    # S-Box demo (simplified)
-    group1 = xor_result[:6]
-    row = int(group1[0] + group1[5], 2)
-    col = int(group1[1:5], 2)
-    s_output = S1[row][col]
-    print(f"📦 S-BOX DEMO (Group 1):")
-    print(f"6-bit input:  {group1}")
-    print(f"Row={row}, Col={col} → S1[{row}][{col}] = {s_output}")
-    print(f"4-bit output: {format(s_output, '04b')}")
-    print("... (7 more S-boxes)")
+    # S-Box demo (full 8 S-Boxes)
+    sboxes = [S1, S2, S3, S4, S5, S6, S7, S8]
+    sbox_outputs = []
+    print(f"📦 S-BOX DEMO (All 8 groups):")
+    for i in range(8):
+        group = xor_result[i*6:(i+1)*6]
+        row = int(group[0] + group[5], 2)
+        col = int(group[1:5], 2)
+        sbox_val = sboxes[i][row][col]
+        sbox_bin = format(sbox_val, '04b')
+        sbox_outputs.append(sbox_bin)
+        print(f"Group {i+1}: {group} → S{i+1}[{row}][{col}] = {sbox_val:2d} → {sbox_bin}")
+    sbox_output_str = ''.join(sbox_outputs)
+    print(f"S-Boxes Output (32-bit): {sbox_output_str}")
+    
+    # P-Box permutation
+    pbox_output = permute(sbox_output_str, P)
+    print(f"P-Box Output (32-bit):   {pbox_output}")
     print()
     
     # Complete Feistel Round
@@ -555,7 +605,9 @@ def des_demo():
     print(f"L1 = R0 = {R0}")
     print(f"R1 = L0 ⊕ F(R0,K1)")
     print(f"   = {L0}")
-    print(f"   ⊕ F_result (từ F function)")
+    print(f"   ⊕ {pbox_output}")
+    r1 = xor(L0, pbox_output)
+    print(f"   = {r1}")
     print()
     
     print("✅ DEMO COMPLETE!")
@@ -665,11 +717,62 @@ Expanded R0:  000000000001011100000000000011111011111010100000
 K1:           101100001001001011000010001100111010000001001100
 XOR result:   101100001000010111000010001111000001111011101100
 
-📦 S-BOX DEMO (Group 1):
-6-bit input:  101100
-Row=2, Col=6 → S1[2][6] = 2
-4-bit output: 0010
-... 
+📦 S-BOX DEMO (All 8 groups):
+Group 1: 011000 → S1[0][12] =  5 → 0101
+Group 2: 010000 → S2[0][8] =  9 → 1001
+Group 3: 100001 → S3[3][0] =  1 → 0001
+Group 4: 000100 → S4[0][2] = 13 → 1101
+Group 5: 110011 → S5[3][9] = 11 → 1011
+Group 6: 110111 → S6[3][11] = 14 → 1110
+Group 7: 000010 → S7[0][1] =  4 → 0100
+Group 8: 001101 → S8[1][6] = 13 → 1101
+S-Boxes Output (32-bit): 01011001000111011011111001001101
+
+P-Box Output (32-bit):  10010110011100001011010111000110
+
+🔄 FEISTEL ROUND STRUCTURE:
+L(i+1) = R(i)
+R(i+1) = L(i) ⊕ F(R(i), K(i))
+
+For Round 1:
+L1 = R0 = 00000000111000000001110111010000
+R1 = L0 ⊕ F(R0,K1)
+   = 00011111111000000001111010110010
+   ⊕ F_result (từ F function)
+
+✅ DEMO COMPLETE!
+📖 This demonstrates key DES operations:
+   • Binary conversion
+   • Initial Permutation (IP)
+   • Key Schedule (PC-1, shifts, PC-2)
+   • F Function (E-box, S-boxes, P-box)
+   • Feistel Round structure
+
+🔒 Note: DES is for educational use only!
+
+==================================================
+        BASIC FUNCTION TESTS
+==================================================
+
+🧪 string_to_bits('H'):
+   Expected: 01001000
+   Got:      01001000
+   Status:   ✅ PASS
+
+🧪 permute('1234', [4, 3, 2, 1]):
+   Expected: 4321
+   Got:      4321
+   Status:   ✅ PASS
+
+🧪 left_shift('12345678', 2):
+   Expected: 34567812
+   Got:      34567812
+   Status:   ✅ PASS
+
+🧪 xor('1010', '1100'):
+   Expected: 0110
+   Got:      0110
+   Status:   ✅ PASS
 
 ================================================================================
 📌 GHI CHÚ QUAN TRỌNG
@@ -680,4 +783,3 @@ Row=2, Col=6 → S1[2][6] = 2
 2. Key size 56-bit quá nhỏ, có thể bị brute force
 3. Block size 64-bit nhỏ, dễ bị birthday attack
 4. Đã được thay thế bởi AES từ năm 2001
-

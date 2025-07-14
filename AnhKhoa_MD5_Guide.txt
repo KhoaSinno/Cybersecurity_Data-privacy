@@ -1,0 +1,352 @@
+================================================================================
+            MD5 (MESSAGE DIGEST 5)
+================================================================================
+
+📖 MỤC LỤC:
+1. TỔNG QUAN QUY TRÌNH
+2. KIẾN THỨC BIT MANIPULATION
+3. PADDING MESSAGE
+4. MD BUFFER INITIALIZATION
+5. CÁC HÀM PHỤ TRỢ F, G, H, I
+6. 64 ROUNDS XỬ LÝ
+7. OUTPUT HASH 128-BIT
+8. VÍ DỤ THỰC TẾ HOÀN CHỈNH
+9. CHẠY CODE DEMO
+
+================================================================================
+1. 📋 TỔNG QUAN QUY TRÌNH
+================================================================================
+
+MD5 là thuật toán hash mật mã tạo ra digest 128-bit từ message bất kỳ.
+
+QUY TRÌNH TỔNG QUÁT:
+- Padding message thành bội số của 512 bit
+- Khởi tạo 4 thanh ghi A, B, C, D (MD Buffer)
+- Chia message thành các block 512-bit
+- Xử lý từng block qua 64 rounds
+- Mỗi round dùng 1 trong 4 hàm F, G, H, I
+- Kết hợp A, B, C, D thành hash 128-bit cuối cùng
+- Chuyển đổi sang dạng hex (32 ký tự)
+
+================================================================================
+2. 🔧 KIẾN THỨC BIT MANIPULATION
+================================================================================
+
+== Các phép toán bit cơ bản ==
+- AND (&): 1010 & 1100 = 1000
+- OR (|): 1010 | 1100 = 1110  
+- XOR (^): 1010 ^ 1100 = 0110
+- NOT (~): ~1010 = 0101 (đảo bit)
+- LEFT SHIFT (<<): 1010 << 2 = 101000
+- RIGHT SHIFT (>>): 1010 >> 2 = 10
+
+== Left Rotate (quan trọng trong MD5) ==
+- Xoay trái k bit: bit bên trái nhất chuyển về bên phải
+- Ví dụ: 11010000 rotate left 3 = 10000110
+- Python: ((x << n) | (x >> (32-n))) & 0xFFFFFFFF
+
+================================================================================
+3. 📦 PADDING MESSAGE
+================================================================================
+
+MỤC ĐÍCH: Đưa message về độ dài chuẩn cho MD5
+
+BƯỚC 3.1: THÊM BIT '1'
+Message gốc + bit '1' (0x80 trong byte)
+
+BƯỚC 3.2: THÊM BITS '0' 
+Thêm k bits '0' sao cho (original_length + 1 + k) ≡ 448 (mod 512)
+Tức là còn lại 64 bit cuối để ghi độ dài
+
+BƯỚC 3.3: THÊM ORIGINAL LENGTH
+64 bit cuối ghi độ dài message gốc (tính bằng bit, little-endian)
+
+VÍ DỤ PADDING:
+Message: "abc" (24 bit)
+- Thêm '1': "abc" + 1
+- Thêm '0': cần 423 bits '0' để đạt 448 bit
+- Thêm length: 24 (trong 64-bit little-endian)
+- Tổng: 512 bit (1 block)
+
+================================================================================
+4. 🎯 MD BUFFER INITIALIZATION
+================================================================================
+
+MD5 dùng 4 thanh ghi 32-bit, khởi tạo với giá trị cố định:
+
+A = 0x67452301
+B = 0xEFCDAB89
+C = 0x98BADCFE  
+D = 0x10325476
+
+Các giá trị này được chọn để tối ưu tính avalanche effect.
+
+================================================================================
+5. ⚙️ CÁC HÀM PHỤ TRỢ F, G, H, I
+================================================================================
+
+MD5 dùng 4 hàm phi tuyến, mỗi hàm dùng cho 16 rounds:
+
+F(X,Y,Z) = (X & Y) | (~X & Z)
+- Rounds 1-16
+- "Chọn": nếu X=1 thì lấy Y, nếu X=0 thì lấy Z
+
+G(X,Y,Z) = (X & Z) | (Y & ~Z)  
+- Rounds 17-32
+- Tương tự F nhưng vai trò Z và Y hoán đổi
+
+H(X,Y,Z) = X ^ Y ^ Z
+- Rounds 33-48
+- XOR đơn giản, tạo sự phân tán tốt
+
+I(X,Y,Z) = Y ^ (X | ~Z)
+- Rounds 49-64
+- Phức tạp nhất, tạo hiệu ứng phi tuyến mạnh
+
+================================================================================
+6. 🔄 64 ROUNDS XỬ LÝ
+================================================================================
+
+MỖI BLOCK 512-BIT QUA 64 ROUNDS:
+
+== Chuẩn bị ==
+- Chia block thành 16 words 32-bit: X[0], X[1], ..., X[15]
+- Sao chép A, B, C, D hiện tại vào a, b, c, d
+
+== Cấu trúc mỗi round ==
+Temp = a + F(b,c,d) + X[g] + K[i] + S<<<s
+a = d
+b = b + (Temp <<< s) 
+c = b (cũ)
+d = c (cũ)
+
+Trong đó:
+- F: một trong 4 hàm F, G, H, I
+- X[g]: word thứ g từ block hiện tại
+- K[i]: hằng số round thứ i
+- s: số bit rotate left
+- g: chỉ số word (khác nhau cho từng nhóm round)
+
+== 4 nhóm rounds ==
+ROUNDS 1-16 (F):  g = i,           s = [7,12,17,22, 7,12,17,22, ...]
+ROUNDS 17-32 (G): g = (5*i+1)%16,  s = [5,9,14,20,  5,9,14,20,  ...]  
+ROUNDS 33-48 (H): g = (3*i+5)%16,  s = [4,11,16,23, 4,11,16,23, ...]
+ROUNDS 49-64 (I): g = (7*i)%16,    s = [6,10,15,21, 6,10,15,21, ...]
+
+== Hằng số K[i] ==
+K[i] = floor(abs(sin(i+1)) * 2^32), i = 0..63
+
+== Sau 64 rounds ==
+A = A + a
+B = B + b  
+C = C + c
+D = D + d
+
+================================================================================
+7. 🎉 OUTPUT HASH 128-BIT
+================================================================================
+
+Sau khi xử lý hết tất cả blocks:
+- Có 4 giá trị cuối cùng: A, B, C, D (mỗi giá trị 32-bit)
+- Ghép theo thứ tự A-B-C-D, mỗi giá trị viết little-endian
+- Chuyển sang hex để có hash string 32 ký tự
+
+VÍ DỤ:
+A = 0x67452301 → 01 23 45 67 (little-endian)
+B = 0xEFCDAB89 → 89 AB CD EF
+C = 0x98BADCFE → FE DC BA 98  
+D = 0x10325476 → 76 54 32 10
+
+Hash = 0123456789ABCDFEFEDBCA9876543210
+
+================================================================================
+8. 📝 VÍ DỤ THỰC TẾ HOÀN CHỈNH
+================================================================================
+
+INPUT: Message = "hello"
+
+BƯỚC 1: PADDING
+"hello" = 0x68656c6c6f (40 bit)
++ bit '1' = 0x68656c6c6f80
++ 407 bits '0' = 0x68656c6c6f80000...000  
++ length 40 = 0x68656c6c6f80000...000 + 0x2800000000000000
+Total: 512 bit (1 block)
+
+BƯỚC 2: KHỞI TẠO
+A = 0x67452301, B = 0xEFCDAB89, C = 0x98BADCFE, D = 0x10325476
+
+BƯỚC 3: CHIA BLOCK
+X[0] = 0x6f6c6c65 (little-endian của "ello")
+X[1] = 0x00000068 (little-endian của "h\0\0\0")  
+X[2] = 0x80000000 (bit padding)
+X[3] = 0x00000000
+...
+X[14] = 0x00000028 (length = 40 bit)
+X[15] = 0x00000000
+
+BƯỚC 4: 64 ROUNDS
+Round 1: F(B,C,D) với X[0], K[0], rotate 7
+Round 2: F(B,C,D) với X[1], K[1], rotate 12
+...
+Round 64: I(B,C,D) với X[5], K[63], rotate 21
+
+BƯỚC 5: KẾT QUẢ
+Sau 64 rounds: A, B, C, D mới
+Hash = little-endian(A) + little-endian(B) + little-endian(C) + little-endian(D)
+= 5d41402abc4b2a76b9719d911017c592
+
+KIỂM TRA: MD5("hello") = 5d41402abc4b2a76b9719d911017c592
+
+================================================================================
+9. 💻 CODE DEMO VỚI PYTHON THUẦN TÚY
+================================================================================
+
+import struct
+import math
+
+def left_rotate(value, shift):
+    """Left rotate 32-bit integer"""
+    return ((value << shift) | (value >> (32 - shift))) & 0xFFFFFFFF
+
+def md5_padding(message):
+    """Thêm padding cho message"""
+    msg_len = len(message)
+    message += b'\x80'  # Thêm bit '1'
+    
+    # Thêm bit '0' cho đến khi length ≡ 448 (mod 512)
+    while len(message) % 64 != 56:
+        message += b'\x00'
+    
+    # Thêm độ dài gốc dưới dạng 64-bit little-endian
+    message += struct.pack('<Q', msg_len * 8)
+    return message
+
+def md5_hash(message):
+    """Tính MD5 hash của message"""
+    # Khởi tạo MD Buffer
+    h0 = 0x67452301
+    h1 = 0xEFCDAB89
+    h2 = 0x98BADCFE
+    h3 = 0x10325476
+    
+    # Hằng số K[i] = floor(abs(sin(i+1)) * 2^32)
+    K = [int(abs(math.sin(i + 1)) * (2**32)) & 0xFFFFFFFF for i in range(64)]
+    
+    # Số bit rotate cho mỗi round
+    s = ([7,12,17,22] * 4 + [5,9,14,20] * 4 + 
+         [4,11,16,23] * 4 + [6,10,15,21] * 4)
+    
+    # Padding message
+    message = md5_padding(message)
+    
+    print(f"📝 Message sau padding: {message.hex()}")
+    print(f"📏 Độ dài: {len(message)} bytes = {len(message)*8} bits")
+    print()
+    
+    # Xử lý từng block 512-bit
+    for block_num in range(0, len(message), 64):
+        block = message[block_num:block_num+64]
+        w = list(struct.unpack('<16I', block))
+        
+        print(f"🔄 Block {block_num//64 + 1}:")
+        print(f"   Words: {[hex(x) for x in w[:4]]}...")
+        
+        a, b, c, d = h0, h1, h2, h3
+        
+        # 64 rounds
+        for i in range(64):
+            if i < 16:
+                f = (b & c) | (~b & d)
+                g = i
+                func_name = "F"
+            elif i < 32:
+                f = (d & b) | (~d & c)
+                g = (5 * i + 1) % 16
+                func_name = "G"
+            elif i < 48:
+                f = b ^ c ^ d
+                g = (3 * i + 5) % 16
+                func_name = "H"
+            else:
+                f = c ^ (b | ~d)
+                g = (7 * i) % 16
+                func_name = "I"
+            
+            temp = (a + f + K[i] + w[g]) & 0xFFFFFFFF
+            temp = left_rotate(temp, s[i])
+            temp = (b + temp) & 0xFFFFFFFF
+            
+            a, b, c, d = d, temp, b, c
+            
+            if i < 4 or i >= 60:  # In vài round đầu và cuối
+                print(f"   Round {i+1:2d} ({func_name}): a={a:08x} b={b:08x} c={c:08x} d={d:08x}")
+        
+        h0 = (h0 + a) & 0xFFFFFFFF
+        h1 = (h1 + b) & 0xFFFFFFFF
+        h2 = (h2 + c) & 0xFFFFFFFF
+        h3 = (h3 + d) & 0xFFFFFFFF
+        
+        print(f"   Sau block: A={h0:08x} B={h1:08x} C={h2:08x} D={h3:08x}")
+        print()
+    
+    # Trả về hash cuối cùng
+    return struct.pack('<4I', h0, h1, h2, h3).hex()
+
+def demo():
+    """Demo MD5 hoàn chỉnh"""
+    
+    print("=" * 50)
+    print("        MD5 EDUCATIONAL DEMO")
+    print("=" * 50)
+    print()
+    
+    # Test cases
+    test_cases = [
+        b"",
+        b"a", 
+        b"hello",
+        b"The quick brown fox jumps over the lazy dog"
+    ]
+    
+    for message in test_cases:
+        print(f"🧪 Message: '{message.decode()}'")
+        hash_result = md5_hash(message)
+        print(f"🎯 MD5 Hash: {hash_result}")
+        print(f"📏 Hash length: {len(hash_result)} ký tự hex")
+        print("-" * 50)
+        print()
+
+def simple_test():
+    """Test đơn giản với known values"""
+    print("\n" + "=" * 50)
+    print("        KNOWN VALUE TESTS")
+    print("=" * 50)
+    
+    known_tests = [
+        (b"", "d41d8cd98f00b204e9800998ecf8427e"),
+        (b"a", "0cc175b9c0f1b6a831c399e269772661"),
+        (b"hello", "5d41402abc4b2a76b9719d911017c592")
+    ]
+    
+    for message, expected in known_tests:
+        result = md5_hash(message)
+        status = "✅ PASS" if result == expected else "❌ FAIL"
+        print(f"MD5('{message.decode()}'): {status}")
+        print(f"  Expected: {expected}")
+        print(f"  Got:      {result}")
+        print()
+
+if __name__ == "__main__":
+    demo()
+    simple_test()
+
+================================================================================
+📌 GHI CHÚ QUAN TRỌNG
+================================================================================
+
+⚠️  Kiến thức không ai chỉ:
+1. MD5 KHÔNG còn an toàn cho mục đích bảo mật (có thể tạo collision)
+2. Chỉ dùng MD5 cho checksum hoặc học tập, KHÔNG dùng cho password
+3. Thay thế bằng SHA-256, SHA-3, bcrypt, scrypt cho ứng dụng thực tế
+4. MD5 vẫn hữu ích để hiểu cách hoạt động của hash function
+5. Collision đầu tiên được tìm thấy năm 2004, practical attack từ 2005

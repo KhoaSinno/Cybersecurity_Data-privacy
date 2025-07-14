@@ -1,0 +1,178 @@
+================================================================================
+            RSA (RIVEST–SHAMIR–ADLEMAN)
+================================================================================
+
+📖 MỤC LỤC:
+1. TỔNG QUAN QUY TRÌNH
+2. KIẾN THỨC SỐ HỌC LIÊN QUAN
+3. TÌM PHẦN DƯ PHÉP CHIA MODULO
+4. SỐ NGUYÊN TỐ CÙNG NHAU
+5. TÌM UCLN - BCNN
+6. TẠO KHÓA RSA
+7. MÃ HÓA & GIẢI MÃ
+8. VÍ DỤ THỰC TẾ HOÀN CHỈNH
+9. CHẠY CODE DEMO
+
+================================================================================
+1. 📋 TỔNG QUAN QUY TRÌNH
+================================================================================
+
+RSA là thuật toán mã hóa bất đối xứng phổ biến nhất, sử dụng cặp khóa công khai và bí mật.
+
+QUY TRÌNH TỔNG QUÁT:
+- Sinh 2 số nguyên tố lớn p, q
+- Tính n = p * q
+- Tính φ(n) = (p-1)*(q-1)
+- Chọn e sao cho 1 < e < φ(n) và gcd(e, φ(n)) = 1
+- Tìm d sao cho e*d ≡ 1 (mod φ(n))
+- Công khai (n, e), giữ bí mật d
+- Mã hóa: c = m^e mod n
+- Giải mã: m = c^d mod n
+
+================================================================================
+2. 📚 KIẾN THỨC SỐ HỌC LIÊN QUAN
+================================================================================
+
+- Phép chia lấy dư (modulo)
+- Số nguyên tố cùng nhau
+- Ước chung lớn nhất (UCLN)
+- Bội chung nhỏ nhất (BCNN)
+- Thuật toán Euclid mở rộng
+
+================================================================================
+3. ➗ TÌM PHẦN DƯ PHÉP CHIA MODULO
+================================================================================
+
+- Ký hiệu: a mod n = phần dư khi chia a cho n
+- Ví dụ: 17 mod 5 = 2 (vì 17 = 3*5 + 2)
+- Trong Python: 17 % 5 = 2
+
+================================================================================
+4. 🔢 SỐ NGUYÊN TỐ CÙNG NHAU
+================================================================================
+
+- Hai số a, b gọi là nguyên tố cùng nhau nếu gcd(a, b) = 1
+- Ví dụ: 8 và 15 là nguyên tố cùng nhau (gcd(8, 15) = 1)
+- 8 và 12 không nguyên tố cùng nhau (gcd(8, 12) = 4)
+
+================================================================================
+5. 🔍 TÌM UCLN - BCNN
+================================================================================
+
+- UCLN (gcd): Số lớn nhất chia hết cả a và b
+- BCNN (lcm): Số nhỏ nhất chia hết cả a và b
+- Công thức: lcm(a, b) = (a * b) // gcd(a, b)
+- Thuật toán Euclid:
+    def gcd(a, b):
+        while b:
+            a, b = b, a % b
+        return a
+
+================================================================================
+6. 🔑 TẠO KHÓA RSA
+================================================================================
+
+BƯỚC 1: Chọn 2 số nguyên tố lớn p, q
+BƯỚC 2: Tính n = p * q
+BƯỚC 3: Tính φ(n) = (p-1)*(q-1)
+BƯỚC 4: Chọn e sao cho 1 < e < φ(n) và gcd(e, φ(n)) = 1
+BƯỚC 5: Tìm d sao cho e*d ≡ 1 (mod φ(n)) (d là nghịch đảo modular của e)
+
+================================================================================
+7. 🔒 MÃ HÓA & GIẢI MÃ
+================================================================================
+
+- Mã hóa: c = m^e mod n
+- Giải mã: m = c^d mod n
+- m: bản rõ (số nguyên < n)
+- c: bản mã
+
+================================================================================
+8. 📝 VÍ DỤ THỰC TẾ HOÀN CHỈNH
+================================================================================
+
+Chọn p = 61, q = 53
+n = 61 * 53 = 3233
+φ(n) = (61-1)*(53-1) = 60*52 = 3120
+Chọn e = 17 (gcd(17,3120)=1)
+Tìm d sao cho 17*d ≡ 1 (mod 3120) → d = 2753
+Khóa công khai: (n=3233, e=17)
+Khóa bí mật: d=2753
+Mã hóa m=65: c = 65^17 mod 3233 = 2790
+Giải mã: m = 2790^2753 mod 3233 = 65
+
+================================================================================
+9. 💻 CODE DEMO VỚI PYTHON THUẦN TÚY
+================================================================================
+
+def gcd(a, b):
+    """Tìm UCLN của a và b"""
+    while b:
+        a, b = b, a % b
+    return a
+
+def lcm(a, b):
+    """Tìm BCNN của a và b"""
+    return a * b // gcd(a, b)
+
+def modinv(e, phi):
+    """Tìm nghịch đảo modular của e mod phi (dùng Euclid mở rộng)"""
+    t, newt = 0, 1
+    r, newr = phi, e
+    while newr != 0:
+        quotient = r // newr
+        t, newt = newt, t - quotient * newt
+        r, newr = newr, r - quotient * newr
+    if r > 1:
+        raise Exception('e không có nghịch đảo')
+    if t < 0:
+        t += phi
+    return t
+
+def is_coprime(a, b):
+    """Kiểm tra nguyên tố cùng nhau"""
+    return gcd(a, b) == 1
+
+def rsa_keygen(p, q, e):
+    n = p * q
+    phi = (p-1)*(q-1)
+    if not is_coprime(e, phi):
+        raise Exception('e không nguyên tố cùng phi(n)')
+    d = modinv(e, phi)
+    return (n, e, d)
+
+def rsa_encrypt(m, e, n):
+    return pow(m, e, n)
+
+def rsa_decrypt(c, d, n):
+    return pow(c, d, n)
+
+def demo():
+    print("="*50)
+    print("        RSA EDUCATIONAL DEMO")
+    print("="*50)
+    p, q = 61, 53
+    e = 17
+    n, e, d = rsa_keygen(p, q, e)
+    print(f"Public key: (n={n}, e={e})")
+    print(f"Private key: d={d}")
+    m = 65
+    print(f"Plaintext: {m}")
+    c = rsa_encrypt(m, e, n)
+    print(f"Ciphertext: {c}")
+    m2 = rsa_decrypt(c, d, n)
+    print(f"Decrypted: {m2}")
+    print(f"Status: {'✅ PASS' if m == m2 else '❌ FAIL'}")
+
+if __name__ == "__main__":
+    demo()
+
+================================================================================
+📌 GHI CHÚ QUAN TRỌNG
+================================================================================
+
+⚠️  Kiến thức không ai chỉ:
+1. RSA chỉ dành cho mục đích giáo dục - KHÔNG an toàn nếu dùng key nhỏ
+2. Không dùng RSA để mã hóa dữ liệu lớn, chỉ dùng để mã hóa key đối xứng
+3. Chọn e phổ biến: 3, 17, 65537
+4. Độ dài key tối thiểu nên >= 2048 bit cho an toàn

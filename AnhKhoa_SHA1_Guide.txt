@@ -1,0 +1,411 @@
+================================================================================
+            SHA-1 (SECURE HASH ALGORITHM 1)
+================================================================================
+
+📖 MỤC LỤC:
+1. TỔNG QUAN QUY TRÌNH
+2. KIẾN THỨC BIT MANIPULATION
+3. PADDING MESSAGE
+4. HASH VALUES INITIALIZATION
+5. MESSAGE SCHEDULE (W[0] ĐẾN W[79])
+6. CÁC HÀM LOGIC f0, f1, f2, f3
+7. 80 ROUNDS XỬ LÝ
+8. OUTPUT HASH 160-BIT
+9. VÍ DỤ THỰC TẾ HOÀN CHỈNH
+10. CHẠY CODE DEMO
+
+================================================================================
+1. 📋 TỔNG QUAN QUY TRÌNH
+================================================================================
+
+SHA-1 là thuật toán hash mật mã tạo ra digest 160-bit từ message bất kỳ.
+
+QUY TRÌNH TỔNG QUÁT:
+- Padding message thành bội số của 512 bit
+- Khởi tạo 5 thanh ghi H0, H1, H2, H3, H4 (Hash Values)
+- Chia message thành các block 512-bit
+- Mỗi block: mở rộng 16 words thành 80 words (Message Schedule)
+- Xử lý từng block qua 80 rounds
+- Mỗi 20 rounds dùng 1 hàm logic và 1 hằng số K
+- Kết hợp H0, H1, H2, H3, H4 thành hash 160-bit cuối cùng
+- Chuyển đổi sang dạng hex (40 ký tự)
+
+================================================================================
+2. 🔧 KIẾN THỨC BIT MANIPULATION
+================================================================================
+
+== Các phép toán bit cơ bản ==
+- AND (&): 1010 & 1100 = 1000
+- OR (|): 1010 | 1100 = 1110  
+- XOR (^): 1010 ^ 1100 = 0110
+- NOT (~): ~1010 = 0101 (đảo bit)
+- LEFT SHIFT (<<): 1010 << 2 = 101000
+- RIGHT SHIFT (>>): 1010 >> 2 = 10
+
+== Left Rotate (ROTL) - Cực kỳ quan trọng trong SHA-1 ==
+- Xoay trái k bit: bit bên trái nhất chuyển về bên phải
+- Ví dụ: ROTL(11010000, 3) = 10000110
+- Python: ((x << n) | (x >> (32-n))) & 0xFFFFFFFF
+- SHA-1 dùng ROTL(5), ROTL(30) rất nhiều
+
+== Big-endian vs Little-endian ==
+- SHA-1 dùng Big-endian (khác với MD5 dùng Little-endian)
+- 0x12345678 trong Big-endian: 12 34 56 78
+- 0x12345678 trong Little-endian: 78 56 34 12
+
+================================================================================
+3. 📦 PADDING MESSAGE
+================================================================================
+
+MỤC ĐÍCH: Đưa message về độ dài chuẩn cho SHA-1
+
+BƯỚC 3.1: THÊM BIT '1'
+Message gốc + bit '1' (0x80 trong byte)
+
+BƯỚC 3.2: THÊM BITS '0' 
+Thêm k bits '0' sao cho (original_length + 1 + k) ≡ 448 (mod 512)
+Tức là còn lại 64 bit cuối để ghi độ dài
+
+BƯỚC 3.3: THÊM ORIGINAL LENGTH
+64 bit cuối ghi độ dài message gốc (tính bằng bit, BIG-ENDIAN)
+
+VÍ DỤ PADDING:
+Message: "abc" (24 bit)
+- Thêm '1': "abc" + 1
+- Thêm '0': cần 423 bits '0' để đạt 448 bit
+- Thêm length: 24 (trong 64-bit big-endian)
+- Tổng: 512 bit (1 block)
+
+LƯU Ý: SHA-1 dùng BIG-ENDIAN, khác với MD5 dùng LITTLE-ENDIAN
+
+================================================================================
+4. 🎯 HASH VALUES INITIALIZATION
+================================================================================
+
+SHA-1 dùng 5 thanh ghi 32-bit, khởi tạo với giá trị cố định:
+
+H0 = 0x67452301
+H1 = 0xEFCDAB89
+H2 = 0x98BADCFE  
+H3 = 0x10325476
+H4 = 0xC3D2E1F0
+
+Các giá trị này được chọn dựa trên căn bậc hai của các số nguyên tố đầu tiên.
+
+================================================================================
+5. 📈 MESSAGE SCHEDULE (W[0] ĐẾN W[79])
+================================================================================
+
+MỤC ĐÍCH: Mở rộng 16 words thành 80 words cho 80 rounds
+
+BƯỚC 5.1: CHIA BLOCK THÀNH 16 WORDS
+Block 512-bit → 16 words 32-bit (W[0] đến W[15])
+Mỗi word đọc theo Big-endian
+
+BƯỚC 5.2: MỞ RỘNG THÀNH 80 WORDS
+Với i từ 16 đến 79:
+W[i] = ROTL(W[i-3] ⊕ W[i-8] ⊕ W[i-14] ⊕ W[i-16], 1)
+
+VÍ DỤ:
+W[16] = ROTL(W[13] ⊕ W[8] ⊕ W[2] ⊕ W[0], 1)
+W[17] = ROTL(W[14] ⊕ W[9] ⊕ W[3] ⊕ W[1], 1)
+...
+
+ĐẶC ĐIỂM:
+- Tạo sự phụ thuộc giữa các words
+- Mỗi W[i] phụ thuộc vào 4 words trước đó
+- ROTL(1) tăng tính phi tuyến
+
+================================================================================
+6. ⚙️ CÁC HÀM LOGIC f0, f1, f2, f3
+================================================================================
+
+SHA-1 dùng 4 hàm phi tuyến, mỗi hàm dùng cho 20 rounds:
+
+f0(B,C,D) = (B & C) | (~B & D)
+- Rounds 0-19
+- "Chọn": nếu B=1 thì lấy C, nếu B=0 thì lấy D
+- Giống hàm F trong MD5
+
+f1(B,C,D) = B ⊕ C ⊕ D
+- Rounds 20-39
+- XOR đơn giản, tạo sự phân tán tốt
+- Tuyến tính nhất trong 4 hàm
+
+f2(B,C,D) = (B & C) | (B & D) | (C & D)
+- Rounds 40-59  
+- "Majority": kết quả là bit xuất hiện nhiều nhất
+- Phi tuyến mạnh nhất
+
+f3(B,C,D) = B ⊕ C ⊕ D
+- Rounds 60-79
+- Giống f1, tạo sự đối xứng trong thuật toán
+
+================================================================================
+7. 🔄 80 ROUNDS XỬ LÝ
+================================================================================
+
+MỖI BLOCK 512-BIT QUA 80 ROUNDS:
+
+== Chuẩn bị ==
+- Có 80 words: W[0], W[1], ..., W[79] từ Message Schedule
+- Sao chép H0, H1, H2, H3, H4 hiện tại vào A, B, C, D, E
+
+== Cấu trúc mỗi round ==
+temp = ROTL(A, 5) + f(B,C,D) + E + K + W[round]
+E = D
+D = C  
+C = ROTL(B, 30)
+B = A
+A = temp
+
+Trong đó:
+- f: một trong 4 hàm f0, f1, f2, f3
+- K: hằng số tương ứng với nhóm round
+- W[round]: word thứ round từ Message Schedule
+- ROTL(A, 5): xoay trái A 5 bit
+- ROTL(B, 30): xoay trái B 30 bit
+
+== 4 nhóm rounds và hằng số K ==
+ROUNDS 0-19:   f0(B,C,D), K = 0x5A827999
+ROUNDS 20-39:  f1(B,C,D), K = 0x6ED9EBA1  
+ROUNDS 40-59:  f2(B,C,D), K = 0x8F1BBCDC
+ROUNDS 60-79:  f3(B,C,D), K = 0xCA62C1D6
+
+== Hằng số K được tính như thế nào? ==
+K[0] = floor(sqrt(2) * 2^30) = 0x5A827999
+K[1] = floor(sqrt(3) * 2^30) = 0x6ED9EBA1
+K[2] = floor(sqrt(5) * 2^30) = 0x8F1BBCDC  
+K[3] = floor(sqrt(10) * 2^30) = 0xCA62C1D6
+
+== Sau 80 rounds ==
+H0 = H0 + A
+H1 = H1 + B  
+H2 = H2 + C
+H3 = H3 + D
+H4 = H4 + E
+
+================================================================================
+8. 🎉 OUTPUT HASH 160-BIT
+================================================================================
+
+Sau khi xử lý hết tất cả blocks:
+- Có 5 giá trị cuối cùng: H0, H1, H2, H3, H4 (mỗi giá trị 32-bit)
+- Ghép theo thứ tự H0-H1-H2-H3-H4, mỗi giá trị viết big-endian
+- Chuyển sang hex để có hash string 40 ký tự
+
+VÍ DỤ:
+H0 = 0x67452301 → 67 45 23 01 (big-endian)
+H1 = 0xEFCDAB89 → EF CD AB 89
+H2 = 0x98BADCFE → 98 BA DC FE
+H3 = 0x10325476 → 10 32 54 76
+H4 = 0xC3D2E1F0 → C3 D2 E1 F0
+
+Hash = 67452301EFCDAB8998BADCFE10325476C3D2E1F0
+
+================================================================================
+9. 📝 VÍ DỤ THỰC TẾ HOÀN CHỈNH
+================================================================================
+
+INPUT: Message = "hello"
+
+BƯỚC 1: PADDING
+"hello" = 0x68656c6c6f (40 bit)
++ bit '1' = 0x68656c6c6f80
++ 407 bits '0' = 0x68656c6c6f80000...000  
++ length 40 (big-endian) = 0x68656c6c6f80000...000 + 0x0000000000000028
+Total: 512 bit (1 block)
+
+BƯỚC 2: KHỞI TẠO
+H0 = 0x67452301, H1 = 0xEFCDAB89, H2 = 0x98BADCFE, 
+H3 = 0x10325476, H4 = 0xC3D2E1F0
+
+BƯỚC 3: CHIA BLOCK VÀ MESSAGE SCHEDULE
+W[0] = 0x68656c6c (big-endian của "hell")
+W[1] = 0x6f800000 (big-endian của "o" + padding)  
+W[2] = 0x00000000
+...
+W[14] = 0x00000000
+W[15] = 0x00000028 (length = 40 bit)
+
+W[16] = ROTL(W[13] ⊕ W[8] ⊕ W[2] ⊕ W[0], 1) = ...
+W[17] = ROTL(W[14] ⊕ W[9] ⊕ W[3] ⊕ W[1], 1) = ...
+...
+W[79] = ROTL(W[76] ⊕ W[71] ⊕ W[65] ⊕ W[63], 1) = ...
+
+BƯỚC 4: 80 ROUNDS
+Round 0: f0(B,C,D) với W[0], K[0] = 0x5A827999
+Round 1: f0(B,C,D) với W[1], K[0] = 0x5A827999
+...
+Round 19: f0(B,C,D) với W[19], K[0] = 0x5A827999
+Round 20: f1(B,C,D) với W[20], K[1] = 0x6ED9EBA1
+...
+Round 79: f3(B,C,D) với W[79], K[3] = 0xCA62C1D6
+
+BƯỚC 5: KẾT QUẢ
+Sau 80 rounds: H0, H1, H2, H3, H4 mới
+Hash = big-endian(H0) + big-endian(H1) + big-endian(H2) + big-endian(H3) + big-endian(H4)
+= aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d
+
+KIỂM TRA: SHA-1("hello") = aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d
+
+================================================================================
+10. 💻 CODE DEMO VỚI PYTHON THUẦN TÚY
+================================================================================
+
+import struct
+
+def left_rotate(value, shift):
+    """Left rotate 32-bit integer"""
+    return ((value << shift) | (value >> (32 - shift))) & 0xFFFFFFFF
+
+def sha1_padding(message):
+    """Thêm padding cho message"""
+    msg_len = len(message)
+    message += b'\x80'  # Thêm bit '1'
+    
+    # Thêm bit '0' cho đến khi length ≡ 448 (mod 512)
+    while len(message) % 64 != 56:
+        message += b'\x00'
+    
+    # Thêm độ dài gốc dưới dạng 64-bit big-endian
+    message += struct.pack('>Q', msg_len * 8)
+    return message
+
+def sha1_hash(message):
+    """Tính SHA-1 hash của message"""
+    # Khởi tạo Hash Values
+    h0 = 0x67452301
+    h1 = 0xEFCDAB89
+    h2 = 0x98BADCFE
+    h3 = 0x10325476
+    h4 = 0xC3D2E1F0
+    
+    # Hằng số K cho 4 nhóm rounds
+    K = [0x5A827999, 0x6ED9EBA1, 0x8F1BBCDC, 0xCA62C1D6]
+    
+    # Padding message
+    message = sha1_padding(message)
+    
+    print(f"📝 Message sau padding: {message.hex()}")
+    print(f"📏 Độ dài: {len(message)} bytes = {len(message)*8} bits")
+    print()
+    
+    # Xử lý từng block 512-bit
+    for block_num in range(0, len(message), 64):
+        block = message[block_num:block_num+64]
+        w = list(struct.unpack('>16I', block))
+        
+        print(f"🔄 Block {block_num//64 + 1}:")
+        print(f"   Words W[0-3]: {[hex(x) for x in w[:4]]}")
+        
+        # Message Schedule: mở rộng 16 words thành 80 words
+        for i in range(16, 80):
+            w.append(left_rotate(w[i-3] ^ w[i-8] ^ w[i-14] ^ w[i-16], 1))
+        
+        print(f"   Words W[16-19]: {[hex(x) for x in w[16:20]]}")
+        print(f"   Words W[76-79]: {[hex(x) for x in w[76:80]]}")
+        
+        a, b, c, d, e = h0, h1, h2, h3, h4
+        
+        # 80 rounds
+        for i in range(80):
+            if i < 20:
+                f = (b & c) | (~b & d)
+                k = K[0]
+                func_name = "f0"
+            elif i < 40:
+                f = b ^ c ^ d
+                k = K[1]
+                func_name = "f1"
+            elif i < 60:
+                f = (b & c) | (b & d) | (c & d)
+                k = K[2]
+                func_name = "f2"
+            else:
+                f = b ^ c ^ d
+                k = K[3]
+                func_name = "f3"
+            
+            temp = (left_rotate(a, 5) + f + e + k + w[i]) & 0xFFFFFFFF
+            e = d
+            d = c
+            c = left_rotate(b, 30)
+            b = a
+            a = temp
+            
+            if i < 4 or i >= 76:  # In vài round đầu và cuối
+                print(f"   Round {i:2d} ({func_name}): A={a:08x} B={b:08x} C={c:08x} D={d:08x} E={e:08x}")
+        
+        h0 = (h0 + a) & 0xFFFFFFFF
+        h1 = (h1 + b) & 0xFFFFFFFF
+        h2 = (h2 + c) & 0xFFFFFFFF
+        h3 = (h3 + d) & 0xFFFFFFFF
+        h4 = (h4 + e) & 0xFFFFFFFF
+        
+        print(f"   Sau block: H0={h0:08x} H1={h1:08x} H2={h2:08x} H3={h3:08x} H4={h4:08x}")
+        print()
+    
+    # Trả về hash cuối cùng
+    return struct.pack('>5I', h0, h1, h2, h3, h4).hex()
+
+def demo():
+    """Demo SHA-1 hoàn chỉnh"""
+    
+    print("=" * 60)
+    print("        SHA-1 EDUCATIONAL DEMO")
+    print("=" * 60)
+    print()
+    
+    # Test cases
+    test_cases = [
+        b"",
+        b"a", 
+        b"hello",
+        b"The quick brown fox jumps over the lazy dog"
+    ]
+    
+    for message in test_cases:
+        print(f"🧪 Message: '{message.decode()}'")
+        hash_result = sha1_hash(message)
+        print(f"🎯 SHA-1 Hash: {hash_result}")
+        print(f"📏 Hash length: {len(hash_result)} ký tự hex")
+        print("-" * 60)
+        print()
+
+def simple_test():
+    """Test đơn giản với known values"""
+    print("\n" + "=" * 60)
+    print("        KNOWN VALUE TESTS")
+    print("=" * 60)
+    
+    known_tests = [
+        (b"", "da39a3ee5e6b4b0d3255bfef95601890afd80709"),
+        (b"a", "86f7e437faa5a7fce15d1ddcb9eaeaea377667b8"),
+        (b"hello", "aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d")
+    ]
+    
+    for message, expected in known_tests:
+        result = sha1_hash(message)
+        status = "✅ PASS" if result == expected else "❌ FAIL"
+        print(f"SHA-1('{message.decode()}'): {status}")
+        print(f"  Expected: {expected}")
+        print(f"  Got:      {result}")
+        print()
+
+if __name__ == "__main__":
+    demo()
+    simple_test()
+
+================================================================================
+📌 GHI CHÚ QUAN TRỌNG
+================================================================================
+
+⚠️  Kiến thức không ai chỉ:
+1. SHA-1 KHÔNG còn an toàn cho mục đích bảo mật quan trọng (Google đã tạo collision 2017)
+2. Chỉ dùng SHA-1 cho checksum không quan trọng hoặc học tập
+3. Thay thế bằng SHA-256, SHA-3, BLAKE2 cho ứng dụng thực tế
+4. SHA-1 vẫn được Git sử dụng (nhưng đang chuyển sang SHA-256)
+5. Collision đầu tiên: SHAttered attack 2017, tạo 2 PDF khác nhau cùng SHA-1
+6. SHA-1 chậm hơn MD5 nhưng an toàn hơn (trước khi có collision)
+7. Message Schedule làm SHA-1 phức tạp và an toàn hơn MD5

@@ -57,7 +57,7 @@ Tài liệu này hướng dẫn chi tiết về thuật toán MD5 (Message Diges
 ### 2.2. Padding Message
 
 - Mục đích: Đưa message về độ dài chuẩn cho MD5 (bội số của 512 bit).
-- Quy tắc: Message + '1' + k×'0' + 64-bit length, sao cho tổng ≡ 0 (mod 512).
+- Quy tắc: Message + '1' + k×'0' sao cho tổng độ dài ≡ 448 (mod 512), sau đó thêm 64-bit cuối là độ dài message gốc (tính theo bit), để tổng cuối cùng là bội số của 512.
 
 ### 2.3. Hash Function Properties
 
@@ -75,6 +75,11 @@ Tài liệu này hướng dẫn chi tiết về thuật toán MD5 (Message Diges
 - Thêm bit '1' vào cuối message.
 - Thêm k bits '0' sao cho (length + 1 + k) ≡ 448 (mod 512).
 - Thêm 64-bit cuối là độ dài message gốc (little-endian).
+
+```
+  448 bit đầu: chứa thông điệp gốc + 1 + các 0
+  64 bit cuối: chứa độ dài ban đầu của thông điệp
+```
 
 ### Bước 2: Khởi tạo MD Buffer
 

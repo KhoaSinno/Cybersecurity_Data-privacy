@@ -45,3 +45,7 @@ DEPLOY_GUIDE.md
 FIX_SUMMARY.md
 DEPLOYMENT_READY.md
 GUID.MD
+
+# Node.js
+https_ssl/node_modules/
+https_ssl/package-lock.json

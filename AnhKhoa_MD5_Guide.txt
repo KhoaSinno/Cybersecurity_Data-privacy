@@ -1,5 +1,8 @@
 ================================================================================
             MD5 (MESSAGE DIGEST 5)
+
+
+            vậy thì chia làm các khúc 512bit mỗi khúc 512 sẽ được lặp 16 vòng với một hàm có các tham số (B,C,D,i) để xác định được tính như thế nào dựa vào i, kết quả của một lần lặp sẽ là đầu vào của lần lặp tiếp theo. Tại sao bạn nói 64 rounds là sao
 ================================================================================
 
 📖 MỤC LỤC:
